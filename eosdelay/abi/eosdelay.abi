@@ -8,9 +8,6 @@
       "fields": [{
           "name": "owner",
           "type": "name"
-        },{
-          "name": "next_id",
-          "type": "uint32"
         }
       ]
     },{
@@ -18,7 +15,7 @@
       "base": "",
       "fields": [{
           "name": "ok",
-          "type": "uint64"
+          "type": "uint32"
         },{
           "name": "to",
           "type": "name"
@@ -40,10 +37,6 @@
       "name": "delay",
       "type": "delay",
       "ricardian_contract": ""
-    },{
-      "name": "clear",
-      "type": "clear",
-      "ricardian_contract": ""
     }
   ],
   "tables": [{
@@ -53,7 +46,7 @@
         "owner"
       ],
       "key_types": [
-        "uint64"
+        "name"
       ],
       "type": "global"
     }

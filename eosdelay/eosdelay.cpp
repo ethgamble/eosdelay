@@ -12,15 +12,14 @@ public:
         auto gl_itr = _global.begin();
         if (gl_itr == _global.end())
         {
-            gl_itr = _global.emplace(_self, [&](auto &gl) {
+            gl_itr = _global.emplace(_self, [&](auto& gl) {
                 gl.owner = _self;
-                gl.next_id = 0x0;
             });
         }
     }
 
     /// @abi action 
-    void delay(uint64_t ok, account_name to, asset quant, string memo){
+    void delay(uint32_t ok, account_name to, asset quant, string memo){
         auto gl_itr = _global.begin();
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
@@ -31,7 +30,7 @@ public:
                 _self, N(delay),
                 make_tuple(ok, to, quant, string("delay"))); //将指定行为绑定到该交易上
             out.delay_sec = ok - now() - 1; //设置延迟时间，单位为1秒
-            out.send(_next_id(), _self, false); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
+            out.send(0xffffffffffffffff, _self, true); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
         } else if(memo == "delay"){
             if(now() >= ok){
                 action(
@@ -46,42 +45,19 @@ public:
                     _self, N(delay),
                     make_tuple(ok, to, quant, string("delay")));
                 out.delay_sec = 1;
-                out.send(_next_id(), _self, false); 
+                out.send(0xffffffffffffffff, _self, true); 
             }
         } else {
             eosio_assert(false, "over due");
         }
     }
 
-    /// @abi action 
-    void clear(){
-        auto gl_itr = _global.begin();
-        require_auth(gl_itr->owner);
-        while (true) {
-            gl_itr = _global.begin();
-            if (gl_itr == _global.end()) {
-                break;
-            }
-            _global.erase(gl_itr);
-        }
-    }
-
-    uint64_t _next_id(){
-        auto gl_itr = _global.begin();
-        _global.modify(gl_itr, 0, [&](auto &gl) {
-            gl.next_id++;
-        });
-        return gl_itr->next_id;
-    }
-
-
 private:
-    // @abi table games i64
+    // @abi table global i64
     struct global{
         account_name owner;
-        uint32_t next_id;
         uint64_t primary_key() const { return owner; }
-        EOSLIB_SERIALIZE(global, (owner)(next_id))
+        EOSLIB_SERIALIZE(global, (owner))
     };
 
     typedef eosio::multi_index<N(global), global> global_index;
@@ -95,7 +71,7 @@ private:
           eosio_assert(code == N(eosio), "onerror action's are only valid from the \"eosio\" system account"); \
        } \
        auto self = receiver; \
-       if(code == self && (action==N(delay) || action==N(clear) ||action == N(onerror))) { \
+       if(code == self && (action==N(delay) || action == N(onerror))) { \
           TYPE thiscontract( self ); \
           switch( action ) { \
              EOSIO_API( TYPE, MEMBERS ) \
@@ -104,4 +80,4 @@ private:
     } \
  }
 
-EOSIO_ABI_EX(eosdelay, (delay)(clear))
+EOSIO_ABI_EX(eosdelay, (delay))
