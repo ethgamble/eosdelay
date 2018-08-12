@@ -6,14 +6,11 @@
       "name": "global",
       "base": "",
       "fields": [{
-          "name": "id",
-          "type": "uint64"
-        },{
-          "name": "next_id",
-          "type": "uint64"
-        },{
           "name": "owner",
           "type": "name"
+        },{
+          "name": "next_id",
+          "type": "uint32"
         }
       ]
     },{
@@ -53,7 +50,7 @@
       "name": "global",
       "index_type": "i64",
       "key_names": [
-        "id"
+        "owner"
       ],
       "key_types": [
         "uint64"

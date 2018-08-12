@@ -13,9 +13,8 @@ public:
         if (gl_itr == _global.end())
         {
             gl_itr = _global.emplace(_self, [&](auto &gl) {
-                gl.id = 0;
-                gl.next_id = 0x0fffffffffffffff;
                 gl.owner = _self;
+                gl.next_id = 0x0;
             });
         }
     }
@@ -25,13 +24,13 @@ public:
         auto gl_itr = _global.begin();
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
-        if(now() < ok - 3){
+        if(now() < ok - 1){
             transaction out; //构造交易
             out.actions.emplace_back(
                 permission_level{_self, N(active)},
                 _self, N(delay),
                 make_tuple(ok, to, quant, string("delay"))); //将指定行为绑定到该交易上
-            out.delay_sec = ok - now() - 3; //设置延迟时间，单位为1秒
+            out.delay_sec = ok - now() - 1; //设置延迟时间，单位为1秒
             out.send(_next_id(), _self, false); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
         } else if(memo == "delay"){
             if(now() >= ok){
@@ -79,11 +78,10 @@ public:
 private:
     // @abi table games i64
     struct global{
-        uint64_t id;
-        uint64_t next_id;
         account_name owner;
-        uint64_t primary_key() const { return id; }
-        EOSLIB_SERIALIZE(global, (id)(next_id)(owner))
+        uint32_t next_id;
+        uint64_t primary_key() const { return owner; }
+        EOSLIB_SERIALIZE(global, (owner)(next_id))
     };
 
     typedef eosio::multi_index<N(global), global> global_index;
