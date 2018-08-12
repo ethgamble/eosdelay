@@ -28,9 +28,9 @@ public:
         if(now() < ok){
             transaction out; //构造交易
             out.actions.emplace_back(
-                    permission_level{_self, N(active)},
-                    N(eosio.token), N(transfer),
-                    make_tuple(_self, to, quant, memo)); //将指定行为绑定到该交易上
+                permission_level{_self, N(active)},
+                N(eosio.token), N(transfer),
+                make_tuple(_self, to, quant, memo)); //将指定行为绑定到该交易上
             out.delay_sec = ok - now() + 1; //设置延迟时间，单位为1秒
             out.send(_next_id(), _self, false); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
         } else {
