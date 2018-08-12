@@ -50,7 +50,7 @@
     }
   ],
   "tables": [{
-      "name": "games",
+      "name": "global",
       "index_type": "i64",
       "key_names": [
         "id"
