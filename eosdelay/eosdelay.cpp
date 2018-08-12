@@ -1,6 +1,5 @@
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/asset.hpp>
-#include <eosiolib/print.hpp>
 #include <eosiolib/transaction.hpp>
 
 using namespace eosio;
