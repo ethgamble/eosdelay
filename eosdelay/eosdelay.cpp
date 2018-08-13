@@ -7,12 +7,13 @@ using namespace std;
 
 class eosdelay : public eosio::contract {
 public:
-    eosdelay(account_name self):eosio::contract(self), _global(_self, _self){
+    eosdelay(account_name self):eosio::contract(self), _global(_self, _self){ 
         auto gl_itr = _global.begin();
         if (gl_itr == _global.end())
         {
             gl_itr = _global.emplace(_self, [&](auto& gl) {
                 gl.owner = _self;
+                gl.next_id = 0x0ffffffffffffff0;
             });
         }
     }
@@ -28,10 +29,15 @@ public:
                 permission_level{_self, N(active)},
                 _self, N(delay),
                 make_tuple(ok, to, quant, string("delay"))); //将指定行为绑定到该交易上
-            out.delay_sec = ok - now() - 2; //设置延迟时间，单位为1秒
-            out.send(0xffffffffffffffff, _self, true); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
+            //设置延迟时间，单位为1秒
+            if((ok - now()) / 2 <= 1){
+                out.delay_sec = ok - now() - 1;
+            } else {
+                out.delay_sec = (ok - now()) / 2;
+            }
+            out.send(_next_id(), _self, true); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
         } else if(memo == "delay"){
-            if(now() >= ok){
+            if(current_time() >= ok * 1000000ll || current_time() > (ok * 1000000ll - 500000ll)){
                 action(
                     permission_level{_self, N(active)},
                     N(eosio.token), N(transfer),
@@ -44,19 +50,28 @@ public:
                     _self, N(delay),
                     make_tuple(ok, to, quant, string("delay")));
                 out.delay_sec = 1;
-                out.send(0xffffffffffffffff, _self, true); 
+                out.send(_next_id(), _self, true); 
             }
         } else {
             eosio_assert(false, "over due");
         }
     }
 
+    uint64_t _next_id(){
+        auto gl_itr = _global.begin();
+        _global.modify(gl_itr, 0, [&](auto& gl){
+            gl.next_id++;
+        });
+        return gl_itr->next_id;
+    }
+
 private:
     // @abi table global i64
     struct global{
         account_name owner;
+        uint64_t next_id;
         uint64_t primary_key() const { return owner; }
-        EOSLIB_SERIALIZE(global, (owner))
+        EOSLIB_SERIALIZE(global, (owner)(next_id))
     };
 
     typedef eosio::multi_index<N(global), global> global_index;

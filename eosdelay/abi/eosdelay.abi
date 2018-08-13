@@ -8,6 +8,9 @@
       "fields": [{
           "name": "owner",
           "type": "name"
+        },{
+          "name": " next_id",
+          "type": "uint64"
         }
       ]
     },{
@@ -27,10 +30,6 @@
           "type": "string"
         }
       ]
-    },{
-      "name": "clear",
-      "base": "",
-      "fields": []
     }
   ],
   "actions": [{
