@@ -19,25 +19,25 @@ public:
     }
 
     /// @abi action 
-    void delay(uint32_t ok, account_name to, asset quant, string memo){
+    void delay(uint32_t due, account_name to, asset quant, string memo){
         auto gl_itr = _global.begin();
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
-        if(now() < ok - 2){
+        if(now() < due - 2){
             transaction out; //构造交易
             out.actions.emplace_back(
                 permission_level{_self, N(active)},
                 _self, N(delay),
-                make_tuple(ok, to, quant, string("delay"))); //将指定行为绑定到该交易上
+                make_tuple(due, to, quant, string("delay"))); //将指定行为绑定到该交易上
             //设置延迟时间，单位为1秒
-            if((ok - now()) / 2 <= 1){
-                out.delay_sec = ok - now() - 1;
+            if((due - now()) / 2 <= 1){
+                out.delay_sec = due - now() - 1;
             } else {
-                out.delay_sec = (ok - now()) / 2;
+                out.delay_sec = (due - now()) / 2;
             }
             out.send(_next_id(), _self, true); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
         } else if(memo == "delay"){
-            if(current_time() >= ok * 1000000ll || current_time() > (ok * 1000000ll - 500000ll)){
+            if(current_time() >= due * 1000000ll || current_time() > (due * 1000000ll - 500000ll)){
                 action(
                     permission_level{_self, N(active)},
                     N(eosio.token), N(transfer),
@@ -48,7 +48,7 @@ public:
                 out.actions.emplace_back(
                     permission_level{_self, N(active)},
                     _self, N(delay),
-                    make_tuple(ok, to, quant, string("delay")));
+                    make_tuple(due, to, quant, string("delay")));
                 out.delay_sec = 1;
                 out.send(_next_id(), _self, true); 
             }
