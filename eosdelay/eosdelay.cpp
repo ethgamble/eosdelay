@@ -31,6 +31,12 @@ public:
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
         if(now() < due - 2){
+            // To notifiy the transfer
+            action(
+                permission_level{from, N(active)},
+                N(eosio.token), N(transfer),
+                make_tuple(from, _self, quant, string("delay ") + int2str(due) + string(" now ") + int2str(now()) + string(" remain ") + int2str(due - now())))
+            .send();
             transaction out; //构造交易
             out.actions.emplace_back(
                 permission_level{_self, N(active)},
