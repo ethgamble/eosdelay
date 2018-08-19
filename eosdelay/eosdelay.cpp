@@ -31,17 +31,11 @@ public:
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
         if(now() < due - 2){
-            // To notifiy the transfer
-            action(
-                permission_level{from, N(active)},
-                N(eosio.token), N(transfer),
-                make_tuple(from, _self, asset(1, CORE_SYMBOL), string("delay ") + int2str(due) + string(" now ") + int2str(now()) + string(" remain ") + int2str(due - now())))
-            .send();
             transaction out; //构造交易
             out.actions.emplace_back(
                 permission_level{_self, N(active)},
                 _self, N(delay),
-                make_tuple(due, from, to, quant, string("delay ") + int2str(due) + string(" now ") + int2str(now()) + string(" remain ") + int2str(due - now()))); //将指定行为绑定到该交易上
+                make_tuple(due, from, to, quant, string("delay ") + int2str(due - now()))); //将指定行为绑定到该交易上
             //设置延迟时间，单位为1秒
             if((due - now()) / 2 <= 1){
                 out.delay_sec = due - now() - 1;
@@ -60,14 +54,14 @@ public:
                 action(
                     permission_level{from, N(active)},
                     N(eosio.token), N(transfer),
-                    make_tuple(from, _self, asset(1, CORE_SYMBOL), string("delay ") + int2str(due) + string(" excute ") + int2str(now())))
+                    make_tuple(from, _self, asset(1, CORE_SYMBOL), string("excuted ") + int2str(now())))
                 .send();
             } else {
                 transaction out; //构造交易
                 out.actions.emplace_back(
                     permission_level{_self, N(active)},
                     _self, N(delay),
-                    make_tuple(due, from, to, quant, string("delay ") + int2str(due) + string(" now ") + int2str(now()) + string(" remain ") + int2str(due - now())));
+                    make_tuple(due, from, to, quant, string("delay ") + int2str(due - now())));
                 out.delay_sec = 1;
                 out.send(_next_id(), _self, true); 
             }
