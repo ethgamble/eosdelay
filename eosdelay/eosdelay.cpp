@@ -7,7 +7,10 @@ using namespace std;
 
 class eosdelay : public eosio::contract {
 public:
-    eosdelay(account_name self):eosio::contract(self), _global(_self, _self){ 
+    eosdelay(account_name self):
+    eosio::contract(self), 
+    _global(_self, _self)
+    {
         auto gl_itr = _global.begin();
         if (gl_itr == _global.end())
         {
@@ -19,7 +22,7 @@ public:
     }
 
     /// @abi action 
-    void delay(uint32_t due, account_name to, asset quant, string memo){
+    void delay(uint32_t due, account_name from, account_name to, asset quant, string memo){
         auto gl_itr = _global.begin();
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
@@ -28,7 +31,7 @@ public:
             out.actions.emplace_back(
                 permission_level{_self, N(active)},
                 _self, N(delay),
-                make_tuple(due, to, quant, string("delay"))); //将指定行为绑定到该交易上
+                make_tuple(due, from, to, quant, string("delay"))); //将指定行为绑定到该交易上
             //设置延迟时间，单位为1秒
             if((due - now()) / 2 <= 1){
                 out.delay_sec = due - now() - 1;
@@ -39,16 +42,16 @@ public:
         } else if(memo == "delay"){
             if(current_time() >= due * 1000000ll || current_time() > (due * 1000000ll - 500000ll)){
                 action(
-                    permission_level{_self, N(active)},
+                    permission_level{from, N(active)},
                     N(eosio.token), N(transfer),
-                    make_tuple(_self, to, quant, memo))
+                    make_tuple(from, to, quant, ""))
                 .send();
             } else {
                 transaction out; //构造交易
                 out.actions.emplace_back(
                     permission_level{_self, N(active)},
                     _self, N(delay),
-                    make_tuple(due, to, quant, string("delay")));
+                    make_tuple(due, from, to, quant, string("delay")));
                 out.delay_sec = 1;
                 out.send(_next_id(), _self, true); 
             }
@@ -76,8 +79,11 @@ private:
 
     typedef eosio::multi_index<N(global), global> global_index;
     global_index _global;
-};
 
+    //TODO  add more the target contract struct here
+
+
+};
  #define EOSIO_ABI_EX( TYPE, MEMBERS ) \
  extern "C" { \
     void apply( uint64_t receiver, uint64_t code, uint64_t action ) { \
