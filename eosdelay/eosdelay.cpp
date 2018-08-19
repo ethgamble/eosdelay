@@ -35,7 +35,7 @@ public:
             action(
                 permission_level{from, N(active)},
                 N(eosio.token), N(transfer),
-                make_tuple(from, _self, quant, string("delay ") + int2str(due) + string(" now ") + int2str(now()) + string(" remain ") + int2str(due - now())))
+                make_tuple(from, _self, asset(1, CORE_SYMBOL), string("delay ") + int2str(due) + string(" now ") + int2str(now()) + string(" remain ") + int2str(due - now())))
             .send();
             transaction out; //构造交易
             out.actions.emplace_back(
@@ -50,8 +50,7 @@ public:
             }
             out.send(_next_id(), _self, true); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
         } else if(startWith(memo, "delay")){
-            // if(current_time() >= due * 1000000ll || current_time() > (due * 1000000ll - 500000ll)){
-            if(current_time() >= due * 1000000ll){
+            if(current_time() >= due * 1000000ll || current_time() > (due * 1000000ll - 500000ll)){
                 action(
                     permission_level{from, N(active)},
                     N(eosio.token), N(transfer),
@@ -61,7 +60,7 @@ public:
                 action(
                     permission_level{from, N(active)},
                     N(eosio.token), N(transfer),
-                    make_tuple(from, _self, quant, string("delay ") + int2str(due) + string(" excute ") + int2str(now())))
+                    make_tuple(from, _self, asset(1, CORE_SYMBOL), string("delay ") + int2str(due) + string(" excute ") + int2str(now())))
                 .send();
             } else {
                 transaction out; //构造交易
