@@ -43,27 +43,30 @@ public:
                 out.delay_sec = (due - now()) / 2;
             }
             out.send(_next_id(), _self, true); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
-        } else if(startWith(memo, "delay")){
-            if(current_time() >= due * 1000000ll || current_time() > (due * 1000000ll - 500000ll)){
+        } else if(startWith(memo, "delay") &&  now() <= (due + 60 * 2) ){
+                transaction out1; //构造交易
+                out1.actions.emplace_back(
+                    permission_level{_self, N(active)},
+                    _self, N(delay),
+                    make_tuple(due, from, to, quant, string("delay")));
+                out1.delay_sec = 1;
+                out1.send(_next_id(), _self, true);
+
+                transaction out; //构造交易
+                out.actions.emplace_back(
+                    permission_level{_self, N(active)},
+                    _self, N(delay),
+                    make_tuple(due, from, to, quant, string("action")));
+                out.delay_sec = 1;
+                out.send(_next_id(), _self, true); 
+            
+        } else if(startWith(memo, "action")){
+            if( now() <= (due + 60 * 2) ){
                 action(
                     permission_level{from, N(active)},
                     N(eosio.token), N(transfer),
                     make_tuple(from, to, quant, string("")))
                 .send();
-                // To notifiy the transfer has been sent
-                action(
-                    permission_level{from, N(active)},
-                    N(eosio.token), N(transfer),
-                    make_tuple(from, _self, asset(1, CORE_SYMBOL), string("excuted ") + int2str(now())))
-                .send();
-            } else {
-                transaction out; //构造交易
-                out.actions.emplace_back(
-                    permission_level{_self, N(active)},
-                    _self, N(delay),
-                    make_tuple(due, from, to, quant, string("delay ") + int2str(due - now())));
-                out.delay_sec = 1;
-                out.send(_next_id(), _self, true); 
             }
         } else {
             eosio_assert(false, "over due");
@@ -109,9 +112,6 @@ private:
     global_index _global;
 
     // TODO add other contract's struct to inspect data
-
-
-
 };
 
  #define EOSIO_ABI_EX( TYPE, MEMBERS ) \
