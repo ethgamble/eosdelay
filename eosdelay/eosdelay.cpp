@@ -25,17 +25,17 @@ public:
         }
     }
 
-    /// @abi action 
+    __attribute__((eosio_action)) 
     void delay(uint32_t due, account_name from, account_name to, asset quant, string memo){
         auto gl_itr = _global.begin();
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
-        if(now() < due - 2){
+        if( now() < due - 2 ){
             transaction out; //构造交易
             out.actions.emplace_back(
                 permission_level{_self, N(active)},
                 _self, N(delay),
-                make_tuple(due, from, to, quant, string("delay ") + int2str(due - now()))); //将指定行为绑定到该交易上
+                make_tuple(due, from, to, quant, string("delay "))); //将指定行为绑定到该交易上
             //设置延迟时间，单位为1秒
             if((due - now()) / 2 <= 1){
                 out.delay_sec = due - now() - 1;
@@ -43,31 +43,24 @@ public:
                 out.delay_sec = (due - now()) / 2;
             }
             out.send(_next_id(), _self, true); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
-        } else if(startWith(memo, "delay") &&  now() <= (due + 60 * 2) ){
-                transaction out1; //构造交易
-                out1.actions.emplace_back(
-                    permission_level{_self, N(active)},
-                    _self, N(delay),
-                    make_tuple(due, from, to, quant, string("delay")));
-                out1.delay_sec = 1;
-                out1.send(_next_id(), _self, true);
-
-                transaction out; //构造交易
-                out.actions.emplace_back(
-                    permission_level{_self, N(active)},
-                    _self, N(delay),
-                    make_tuple(due, from, to, quant, string("action")));
-                out.delay_sec = 1;
-                out.send(_next_id(), _self, true); 
-            
-        } else if(startWith(memo, "action")){
-            if( now() <= (due + 60 * 2) ){
-                action(
-                    permission_level{from, N(active)},
-                    N(eosio.token), N(transfer),
-                    make_tuple(from, to, quant, string("")))
-                .send();
+        } else if(startWith(memo, "delay")){
+            transaction out; 
+            auto _memo = string("delay");
+            if( current_time() >= (due * 1000000ll - 1000000ll) ){
+                _memo = string("action");
             }
+            out.actions.emplace_back(
+                    permission_level{_self, N(active)},
+                    _self, N(delay),
+                    make_tuple(due, from, to, quant, _memo));
+            out.delay_sec = 1;
+            out.send(_next_id(), _self, true); 
+        } else if(startWith(memo, "action")){
+            action(
+                permission_level{from, N(active)},
+                N(eosio.token), N(transfer),
+                make_tuple(from, to, quant, string("")))
+            .send();
         } else {
             eosio_assert(false, "over due");
         }
@@ -82,26 +75,12 @@ public:
     }
 
 private:
-    string int2str(uint64_t x){
-        string tmp(""), ans("");
-        while(x > 0)
-        {
-            tmp += (x % 10) + 48;
-            x /= 10;
-        }
-        for(int i = tmp.size() - 1; i >= 0; i--)
-        {
-            ans += tmp[i];
-        }
-        return ans;
-    }  
 
     bool startWith(const string &str, const string &head) {
 	    return str.compare(0, head.size(), head) == 0;
     }
 
-    // @abi table global i64
-    struct global{
+    struct __attribute__((eosio_table)) global{
         account_name owner;
         uint64_t next_id;
         uint64_t primary_key() const { return owner; }
@@ -112,6 +91,7 @@ private:
     global_index _global;
 
     // TODO add other contract's struct to inspect data
+    
 };
 
  #define EOSIO_ABI_EX( TYPE, MEMBERS ) \
