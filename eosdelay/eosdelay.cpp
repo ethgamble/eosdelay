@@ -26,6 +26,7 @@ public:
         auto gl_itr = _global.begin();
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
+        if( now() > due + 2 ) return;
         if( now() < due - 2 ){
             transaction out; //构造交易
             out.actions.emplace_back(
@@ -62,8 +63,6 @@ public:
                 N(eosio.token), N(transfer),
                 make_tuple(from, to, quant, string("")))
             .send();
-        } else {
-            eosio_assert(false, "over due");
         }
     }
 
