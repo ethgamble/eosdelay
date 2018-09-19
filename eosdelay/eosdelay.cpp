@@ -27,6 +27,7 @@ public:
 
     __attribute__((eosio_action)) 
     void delay(uint32_t due, account_name from, account_name to, asset quant, string memo){
+        return;
         auto gl_itr = _global.begin();
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
@@ -35,7 +36,7 @@ public:
             out.actions.emplace_back(
                 permission_level{_self, N(active)},
                 _self, N(delay),
-                make_tuple(due, from, to, quant, string("delay "))); //将指定行为绑定到该交易上
+                make_tuple(due, from, to, quant, string("delay"))); //将指定行为绑定到该交易上
             //设置延迟时间，单位为1秒
             if((due - now()) / 2 <= 1){
                 out.delay_sec = due - now() - 1;
@@ -45,16 +46,21 @@ public:
             out.send(_next_id(), _self, true); //发送交易，第一个参数为该次交易发送id，每次需不同。如果两个发送id相同，则视第三个参数replace_existing来定是覆盖还是直接失败。
         } else if(startWith(memo, "delay")){
             transaction out; 
-            auto _memo = string("delay");
-            if( current_time() >= (due * 1000000ll - 1000000ll) ){
-                _memo = string("action");
-            }
             out.actions.emplace_back(
                     permission_level{_self, N(active)},
                     _self, N(delay),
-                    make_tuple(due, from, to, quant, _memo));
-            out.delay_sec = 1;
+                    make_tuple(due, from, to, quant, string("delay")));
+            out.delay_sec = 0;
             out.send(_next_id(), _self, true); 
+            
+            transaction out1; 
+            out1.actions.emplace_back(
+                    permission_level{_self, N(active)},
+                    _self, N(delay),
+                    make_tuple(due, from, to, quant, string("action")));
+            out1.delay_sec = 0;
+            out1.send(_next_id(), _self, true); 
+            
         } else if(startWith(memo, "action")){
             action(
                 permission_level{from, N(active)},

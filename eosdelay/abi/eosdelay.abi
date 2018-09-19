@@ -3,30 +3,6 @@
     "version": "eosio::abi/1.0",
     "structs": [
         {
-            "name": "asset",
-            "base": "",
-            "fields": [
-                {
-                    "name": "amount",
-                    "type": "int64"
-                },
-                {
-                    "name": "symbol",
-                    "type": "symbol_type"
-                }
-            ]
-        },
-        {
-            "name": "basic_string",
-            "base": "__basic_string_common<true>",
-            "fields": [
-                {
-                    "name": "__r_",
-                    "type": "allocator_type>"
-                }
-            ]
-        },
-        {
             "name": "delay",
             "base": "",
             "fields": [
@@ -67,20 +43,7 @@
             ]
         }
     ],
-    "types": [
-        {
-            "new_type_name": "account_name",
-            "type": "name"
-        },
-        {
-            "new_type_name": "string",
-            "type": "basic_string<char>"
-        },
-        {
-            "new_type_name": "uint32_t",
-            "type": "uint32"
-        }
-    ],
+    "types": [],
     "actions": [
         {
             "name": "delay",
@@ -93,8 +56,8 @@
             "name": "global",
             "type": "global",
             "index_type": "i64",
-            "key_names": [],
-            "key_types": []
+            "key_names": ["owner"],
+            "key_types": ["name"]
         }
     ],
     "ricardian_clauses": [],
