@@ -1,9 +1,5 @@
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/asset.hpp>
-#include <eosiolib/types.hpp>
-#include <eosiolib/action.hpp>
-#include <eosiolib/symbol.hpp>
-#include <eosiolib/time.hpp>
 #include <eosiolib/transaction.hpp>
 
 using namespace eosio;
@@ -100,20 +96,21 @@ private:
     
 };
 
- #define EOSIO_ABI_EX( TYPE, MEMBERS ) \
- extern "C" { \
+#undef EOSIO_ABI
+#define EOSIO_ABI( TYPE, MEMBERS ) \
+extern "C" { \
     void apply( uint64_t receiver, uint64_t code, uint64_t action ) { \
-       if( action == N(onerror)) { \
-          eosio_assert(code == N(eosio), "onerror action's are only valid from the \"eosio\" system account"); \
-       } \
-       auto self = receiver; \
-       if(code == self && (action==N(delay) || action == N(onerror))) { \
-          TYPE thiscontract( self ); \
-          switch( action ) { \
-             EOSIO_API( TYPE, MEMBERS ) \
-          } \
-       } \
+        if( action == N(onerror)) { \
+            eosio_assert(code == N(eosio), "onerror action's are only valid from the \"eosio\" system account"); \
+        } \
+        auto self = receiver; \
+        if(code == self && (action==N(delay) || action == N(onerror))) { \
+            TYPE thiscontract( self ); \
+            switch( action ) { \
+                EOSIO_API( TYPE, MEMBERS ) \
+            } \
+        } \
     } \
- }
+}
 
-EOSIO_ABI_EX(eosdelay, (delay))
+EOSIO_ABI(eosdelay, (delay))
