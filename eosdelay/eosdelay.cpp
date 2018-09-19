@@ -23,7 +23,6 @@ public:
 
     __attribute__((eosio_action)) 
     void delay(uint32_t due, account_name from, account_name to, asset quant, string memo){
-        return;
         auto gl_itr = _global.begin();
         eosio_assert(gl_itr != _global.end(), "owner not defined");
         require_auth(gl_itr->owner);
